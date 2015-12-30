@@ -234,8 +234,9 @@ module.exports = function(homebridge) {
 			.getCharacteristic(Characteristic.On)
 				.on('get', this.getPowerState.bind(this))
 				.on('set', this.setPowerState.bind(this));
-/*
+
 		var audioDeviceService = new PioneerAVR.AudioDeviceService("Audio Functions");
+    /*
 		audioDeviceService
 			.getCharacteristic(PioneerAVR.Muting)
 				.on('get', this.getMuteState.bind(this))
