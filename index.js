@@ -36,9 +36,8 @@ module.exports = function(homebridge) {
   }
 
   // Custom Characteristics and service...
-  /*
   PioneerAVR.AudioVolume = function() {
-    Characteristic.call(this, 'Volume', '00001001-0000-1000-8000-135D67EC4377');
+    Characteristic.call(this, 'Volume', '4804a651-2f32-4e1f-ac75-dacf23d9df93');
     console.log("Maximum Volume", maxVolume);
     this.setProps({
       format: Characteristic.Formats.FLOAT,
@@ -50,9 +49,9 @@ module.exports = function(homebridge) {
     this.value = this.getDefaultValue();
   };
   inherits(PioneerAVR.AudioVolume, Characteristic);
-
+/*
   PioneerAVR.Muting = function() {
-    Characteristic.call(this, 'Mute', '00001002-0000-1000-8000-135D67EC4377');
+    Characteristic.call(this, 'Mute', '4804a652-2f32-4e1f-ac75-dacf23d9df93');
     console.log("Mute Characteristic")
     this.setProps({
       format: Characteristic.Formats.BOOL,
@@ -61,14 +60,14 @@ module.exports = function(homebridge) {
     this.value = this.getDefaultValue();
   };
   inherits(PioneerAVR.Muting, Characteristic);
-
+*/
   PioneerAVR.AudioDeviceService = function(displayName, subtype) {
-    Service.call(this, displayName, '00000001-0000-1000-8000-135D67EC4377', subtype);
+    Service.call(this, displayName, '4804a653-2f32-4e1f-ac75-dacf23d9df93', subtype);
     this.addCharacteristic(PioneerAVR.AudioVolume);
-    this.addCharacteristic(PioneerAVR.Muting);
+    //this.addCharacteristic(PioneerAVR.Muting);
   };
   inherits(PioneerAVR.AudioDeviceService, Service);
-*/
+
   PioneerAVR.prototype = {
 
     httpRequest: function(url, method, callback) {
@@ -189,7 +188,7 @@ module.exports = function(homebridge) {
       this.httpRequest(url, "GET", function(error, response, body) {
         if (!error && response.statusCode == 200) {
           var jsonResponse = JSON.parse(body);
-  		    volumeValue = jsonResponse['Z'][0]['V'];
+  		    volumeValue = Number(jsonResponse['Z'][0]['V']);
           volume = (volumeValue - 161) * 0.5
 
           callback(null, Number(volume));
@@ -206,7 +205,7 @@ module.exports = function(homebridge) {
     },
 
   	setVolume: function(value, callback) {
-      url = this.volume_url + value * 2 + 161 + "VL"
+      url = this.volume_url + (value * 2 + 161) + "VL"
 
   		this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
@@ -241,14 +240,14 @@ module.exports = function(homebridge) {
 			.getCharacteristic(PioneerAVR.Muting)
 				.on('get', this.getMuteState.bind(this))
 				.on('set', this.setMuteState.bind(this));
-
+*/
 		audioDeviceService
 			.getCharacteristic(PioneerAVR.AudioVolume)
 				.on('get', this.getVolume.bind(this))
 				.on('set', this.setVolume.bind(this));
-*/
-    return [informationService, switchService];
-		//return [informationService, switchService, audioDeviceService];
+
+    //return [informationService, switchService];
+		return [informationService, switchService, audioDeviceService];
 		}
 	}
 }
