@@ -36,6 +36,7 @@ module.exports = function(homebridge) {
   }
 
   // Custom Characteristics and service...
+  /*
   PioneerAVR.AudioVolume = function() {
     Characteristic.call(this, 'Volume', '00001001-0000-1000-8000-135D67EC4377');
     console.log("Maximum Volume", maxVolume);
@@ -52,6 +53,7 @@ module.exports = function(homebridge) {
 
   PioneerAVR.Muting = function() {
     Characteristic.call(this, 'Mute', '00001002-0000-1000-8000-135D67EC4377');
+    console.log("Mute Characteristic")
     this.setProps({
       format: Characteristic.Formats.BOOL,
       perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
@@ -66,7 +68,7 @@ module.exports = function(homebridge) {
     this.addCharacteristic(PioneerAVR.Muting);
   };
   inherits(PioneerAVR.AudioDeviceService, Service);
-
+*/
   PioneerAVR.prototype = {
 
     httpRequest: function(url, method, callback) {
@@ -91,7 +93,7 @@ module.exports = function(homebridge) {
       		var jsonResponse = JSON.parse(body);
       		powerState = jsonResponse['Z'][0]['P'];
 
-          if (powerState === 1) {
+          if (powerState == 1) {
             callback(null, true);
           }
           else {
@@ -100,7 +102,7 @@ module.exports = function(homebridge) {
           this.log("Power state is:", powerState);
       	}
         else {
-          this.log('HTTP getPowerState function failed: %s');
+          this.log('HTTP getPowerState function failed: %s', error);
           callback(error);
         }
       }.bind(this))
@@ -125,7 +127,7 @@ module.exports = function(homebridge) {
         	callback();
       	}
       	else {
-          this.log('HTTP power function failed: %s');
+          this.log('HTTP power function failed: %s', error);
         	callback(error);
       		}
     	}.bind(this));
@@ -140,7 +142,7 @@ module.exports = function(homebridge) {
       		var jsonResponse = JSON.parse(body);
 		      muteState = jsonResponse['Z'][0]['M'];
 
-          if (muteState === 1) {
+          if (muteState == 1) {
             callback(null, true);
           }
           else {
@@ -149,7 +151,7 @@ module.exports = function(homebridge) {
           this.log("Mute state is:", muteState);
       	}
         else {
-          this.log('HTTP getMuteState function failed: %s');
+          this.log('HTTP getMuteState function failed: %s', error);
           callback(error);
         }
       }.bind(this))
@@ -174,7 +176,7 @@ module.exports = function(homebridge) {
         	callback();
       	}
       	else {
-          this.log('HTTP mute function failed: %s');
+          this.log('HTTP mute function failed: %s', error);
         	callback(error);
       		}
     	}.bind(this));
@@ -195,7 +197,7 @@ module.exports = function(homebridge) {
           this.log("MasterVolume is:", volume);
       	}
         else {
-          this.log('HTTP getVolume function failed: %s');
+          this.log('HTTP getVolume function failed: %s', error);
         	callback(error);
       		}
 
@@ -208,7 +210,7 @@ module.exports = function(homebridge) {
 
   		this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
-          this.log('HTTP volume function failed: %s');
+          this.log('HTTP volume function failed: %s', error);
           callback(error);
         }
         else {
@@ -233,7 +235,7 @@ module.exports = function(homebridge) {
 			.getCharacteristic(Characteristic.On)
 				.on('get', this.getPowerState.bind(this))
 				.on('set', this.setPowerState.bind(this));
-
+/*
 		var audioDeviceService = new PioneerAVR.AudioDeviceService("Audio Functions");
 		audioDeviceService
 			.getCharacteristic(PioneerAVR.Muting)
@@ -244,8 +246,9 @@ module.exports = function(homebridge) {
 			.getCharacteristic(PioneerAVR.AudioVolume)
 				.on('get', this.getVolume.bind(this))
 				.on('set', this.setVolume.bind(this));
-
-			return [informationService, switchService, audioDeviceService];
+*/
+    return [informationService, switchService];
+		//return [informationService, switchService, audioDeviceService];
 		}
 	}
 }
