@@ -1,7 +1,6 @@
 // Accessory for controlling Pioneer AVR via HomeKit
 
 var request = require("request");
-var parser = require("xml2json");
 var inherits = require('util').inherits;
 var Service, Characteristic;
 
@@ -25,7 +24,7 @@ module.exports = function(homebridge) {
 
     this.log = log;
 
-    this.get_url = "http://" + this.ip + "/goform/formMainZone_MainZoneXml.xml";
+    this.get_url = "http://" + this.ip + "/StatusHandler.asp";
 
     this.on_url = "http://" + this.ip + "/EventHandler.asp?WebToHostItem=PO";
     this.off_url = "http://" + this.ip + "/EventHandler.asp?WebToHostItem=PF";
@@ -33,7 +32,7 @@ module.exports = function(homebridge) {
     this.mute_on = "http://" + this.ip + "/EventHandler.asp?WebToHostItem=MO";
     this.mute_off = "http://" + this.ip + "/EventHandler.asp?WebToHostItem=MF";
 
-    this.volume_url = "http://" + this.ip + "/EventHandler.asp?WebToHostItem=***VL";
+    this.volume_url = "http://" + this.ip + "/EventHandler.asp?WebToHostItem=";
   }
 
   // Custom Characteristics and service...
@@ -83,23 +82,27 @@ module.exports = function(homebridge) {
     },
 
     getPowerState: function(callback) {
+
       var url;
       url = this.get_url;
 
       this.httpRequest(url, "GET", function(error, response, body) {
-        json = parser.toJson(body);
-        jsonObject = JSON.parse(json);
+        if (!error && response.statusCode == 200) {
+      		var jsonResponse = JSON.parse(body);
+      		powerState = jsonResponse['Z'][0]['P'];
 
-        response = jsonObject.item.Power.value;
-
-        if (response === "ON") {
-          callback(null, true);
-        }
+          if (powerState === 1) {
+            callback(null, true);
+          }
+          else {
+            callback(null, false);
+          }
+          this.log("Power state is:", powerState);
+      	}
         else {
-          callback(null, false);
+          this.log('HTTP getPowerState function failed: %s');
+          callback(error);
         }
-        this.log("Power state is:", response);
-
       }.bind(this))
 
     },
@@ -117,13 +120,13 @@ module.exports = function(homebridge) {
     	}
 
     	this.httpRequest(url, "GET", function(error, response, body) {
-      	if (error) {
-        	this.log('HTTP power function failed: %s');
-        	callback(error);
-      	}
-      	else {
+      	if (!error && response.statusCode == 200) {
         	this.log('HTTP power function succeeded!');
         	callback();
+      	}
+      	else {
+          this.log('HTTP power function failed: %s');
+        	callback(error);
       		}
     	}.bind(this));
   	},
@@ -133,19 +136,22 @@ module.exports = function(homebridge) {
       url = this.get_url;
 
       this.httpRequest(url, "GET", function(error, response, body) {
-        json = parser.toJson(body);
-        jsonObject = JSON.parse(json);
+        if (!error && response.statusCode == 200) {
+      		var jsonResponse = JSON.parse(body);
+		      muteState = jsonResponse['Z'][0]['M'];
 
-        response = jsonObject.item.Mute.value;
-
-        if (response === "on") {
-          callback(null, true);
-        }
+          if (muteState === 1) {
+            callback(null, true);
+          }
+          else {
+            callback(null, false);
+          }
+          this.log("Mute state is:", muteState);
+      	}
         else {
-          callback(null, false);
+          this.log('HTTP getMuteState function failed: %s');
+          callback(error);
         }
-        this.log("Mute state is:", response);
-
       }.bind(this))
 
     },
@@ -163,13 +169,13 @@ module.exports = function(homebridge) {
     	}
 
     	this.httpRequest(url, "GET", function(error, response, body) {
-      	if (error) {
-        	this.log('HTTP mute function failed: %s');
-        	callback(error);
-      	}
-      	else {
+        if (!error && response.statusCode == 200) {
         	this.log('HTTP mute function succeeded!');
         	callback();
+      	}
+      	else {
+          this.log('HTTP mute function failed: %s');
+        	callback(error);
       		}
     	}.bind(this));
   	},
@@ -179,21 +185,26 @@ module.exports = function(homebridge) {
       url = this.get_url;
 
       this.httpRequest(url, "GET", function(error, response, body) {
-        json = parser.toJson(body);
-        jsonObject = JSON.parse(json);
+        if (!error && response.statusCode == 200) {
+          var jsonResponse = JSON.parse(body);
+  		    volumeValue = jsonResponse['Z'][0]['V'];
+          volume = (volumeValue - 161) * 0.5
 
-        response = jsonObject.item.MasterVolume.value;
+          callback(null, Number(volume));
 
-        callback(null, Number(response));
-
-        this.log("MasterVolume is:", response);
+          this.log("MasterVolume is:", volume);
+      	}
+        else {
+          this.log('HTTP getVolume function failed: %s');
+        	callback(error);
+      		}
 
       }.bind(this))
 
     },
 
   	setVolume: function(value, callback) {
-      url = this.volume_url + value
+      url = this.volume_url + value * 2 + 161 + "VL"
 
   		this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
