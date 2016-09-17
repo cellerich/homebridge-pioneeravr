@@ -224,12 +224,11 @@ module.exports = function(homebridge) {
 
 		var informationService = new Service.AccessoryInformation();
 		informationService
-			.setCharacteristic(Characteristic.Name, this.name)
 	    		.setCharacteristic(Characteristic.Manufacturer, "Pioneer")
 	    		.setCharacteristic(Characteristic.Model, "VSX-2020")
 	    		.setCharacteristic(Characteristic.SerialNumber, "1234567890");
 
-		var switchService = new Service.Switch("Power State");
+		var switchService = new Service.Switch(this.name);
 		switchService
 			.getCharacteristic(Characteristic.On)
 				.on('get', this.getPowerState.bind(this))
