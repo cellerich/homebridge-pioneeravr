@@ -205,7 +205,11 @@ module.exports = function(homebridge) {
     },
 
   	setVolume: function(value, callback) {
-      url = this.volume_url + (value * 2 + 161) + "VL"
+        var intValue = Math.round(value * 2 + 161);
+        intValue = Math.max(intValue, 0);
+        var valueStr = ("00" + intValue).slice(-3);
+        
+        url = this.volume_url + valueStr + "VL";
 
   		this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
