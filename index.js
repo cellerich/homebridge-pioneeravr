@@ -205,7 +205,11 @@ module.exports = function(homebridge) {
     },
 
   	setVolume: function(value, callback) {
-      url = this.volume_url + (value * 2 + 161) + "VL"
+        var intValue = Math.round(value * 2 + 161);
+        intValue = Math.max(intValue, 0);
+        var valueStr = ("00" + intValue).slice(-3);
+        
+        url = this.volume_url + valueStr + "VL";
 
   		this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
@@ -224,12 +228,11 @@ module.exports = function(homebridge) {
 
 		var informationService = new Service.AccessoryInformation();
 		informationService
-			.setCharacteristic(Characteristic.Name, this.name)
 	    		.setCharacteristic(Characteristic.Manufacturer, "Pioneer")
 	    		.setCharacteristic(Characteristic.Model, "VSX-2020")
 	    		.setCharacteristic(Characteristic.SerialNumber, "1234567890");
 
-		var switchService = new Service.Switch("Power State");
+		var switchService = new Service.Switch(this.name);
 		switchService
 			.getCharacteristic(Characteristic.On)
 				.on('get', this.getPowerState.bind(this))
