@@ -78,8 +78,8 @@ module.exports = function(homebridge) {
         method: method
       },
       function (error, response, body) {
-        callback(error, response, body)
-      })
+        callback(error, response, body);
+      });
     },
 
     getPowerState: function(callback) {
@@ -104,7 +104,7 @@ module.exports = function(homebridge) {
           this.log('HTTP getPowerState function failed: %s', error);
           callback(error);
         }
-      }.bind(this))
+      }.bind(this));
 
     },
 
@@ -153,7 +153,7 @@ module.exports = function(homebridge) {
           this.log('HTTP getMuteState function failed: %s', error);
           callback(error);
         }
-      }.bind(this))
+      }.bind(this));
 
     },
 
@@ -189,7 +189,7 @@ module.exports = function(homebridge) {
         if (!error && response.statusCode == 200) {
           var jsonResponse = JSON.parse(body);
           volumeValue = Number(jsonResponse['Z'][0]['V']);
-          volume = (volumeValue - 161) * 0.5
+          volume = (volumeValue - 161) * 0.5;
 
           callback(null, Number(volume));
 
@@ -200,7 +200,7 @@ module.exports = function(homebridge) {
           callback(error);
           }
 
-      }.bind(this))
+      }.bind(this));
 
     },
 
@@ -253,5 +253,5 @@ module.exports = function(homebridge) {
     //return [informationService, switchService];
     return [informationService, switchService, audioDeviceService];
     }
-  }
-}
+  };
+};
