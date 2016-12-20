@@ -17,10 +17,10 @@ module.exports = function(homebridge) {
 
   function PioneerAVR(log, config) {
     // configuration
-    this.ip = config['ip'];
-    this.name = config['name'];
-    maxVolume = config['maxVolume'];
-    minVolume = config['minVolume'];
+    this.ip = config.ip;
+    this.name = config.name;
+    maxVolume = config.maxVolume;
+    minVolume = config.minVolume;
 
     this.log = log;
 
