@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cellerich/homebridge-pioneeravr.svg?branch=master)](TravisBuild)
+
 # homebridge-pioneeravr
 
 This ia a plugin for homebridge.
