@@ -3,6 +3,9 @@
   "version": "v0.0.1",
   "description": "PioneerAVR plugin for homebridge: https://github.com/cellerich/homebridge-pioneeravr",
   "license": "ISC",
+  "scripts": {
+    "test": "jshint index.js"
+  },
   "keywords": [
     "homebridge-plugin"
   ],
@@ -12,5 +15,8 @@
   },
   "dependencies": {
     "request": "^2.65.0"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.4"
   }
 }

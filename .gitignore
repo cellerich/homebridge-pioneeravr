@@ -1,3 +1,4 @@
 # ignore everithing in PioneerScript Directory
 PioneerScript
 index.js.bkup
+node_modules
