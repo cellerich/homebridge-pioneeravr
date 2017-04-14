@@ -7,6 +7,8 @@ var Service, Characteristic;
 // need to be global to be used in constructor
 var maxVolume;
 var minVolume;
+var maxVolumeSet;  //max volume number we might send to Pioneer
+var minVolumeSet;
 
 module.exports = function(homebridge) {
   Service = homebridge.hap.Service;
@@ -22,6 +24,9 @@ module.exports = function(homebridge) {
     maxVolume = config['maxVolume'];
     minVolume = config['minVolume'];
 
+    maxNumber = Number(maxVolume * 2 + 161);
+		minNumber = Number(minVolume * 2 + 161);
+
     this.log = log;
 
     this.get_url = "http://" + this.ip + "/StatusHandler.asp";
@@ -36,22 +41,25 @@ module.exports = function(homebridge) {
   }
 
   // Custom Characteristics and service...
+
+
   PioneerAVR.AudioVolume = function() {
-    Characteristic.call(this, 'Volume', '4804a651-2f32-4e1f-ac75-dacf23d9df93');
+    Characteristic.call(this, 'Auido Volume', '4804a651-2f32-4e1f-ac75-dacf23d9df93');
     console.log("Maximum Volume", maxVolume);
     this.setProps({
-      format: Characteristic.Formats.FLOAT,
-      maxValue: maxVolume,
-      minValue: minVolume,
-      minStep: 0.5,
+      format: Characteristic.Formats.UINT8,
+      unit: Characteristic.Units.PERCENTAGE,
+      maxValue: 100,
+      minValue: 0,
+      minStep: 1,
       perms: [Characteristic.Perms.READ, Characteristic.Perms.WRITE, Characteristic.Perms.NOTIFY]
     });
     this.value = this.getDefaultValue();
   };
   inherits(PioneerAVR.AudioVolume, Characteristic);
-/*
+
   PioneerAVR.Muting = function() {
-    Characteristic.call(this, 'Mute', '4804a652-2f32-4e1f-ac75-dacf23d9df93');
+    Characteristic.call(this, 'Muting', '4804a652-2f32-4e1f-ac75-dacf23d9df93');
     console.log("Mute Characteristic")
     this.setProps({
       format: Characteristic.Formats.BOOL,
@@ -60,11 +68,11 @@ module.exports = function(homebridge) {
     this.value = this.getDefaultValue();
   };
   inherits(PioneerAVR.Muting, Characteristic);
-*/
+
   PioneerAVR.AudioDeviceService = function(displayName, subtype) {
     Service.call(this, displayName, '4804a653-2f32-4e1f-ac75-dacf23d9df93', subtype);
     this.addCharacteristic(PioneerAVR.AudioVolume);
-    //this.addCharacteristic(PioneerAVR.Muting);
+    this.addCharacteristic(PioneerAVR.Muting);
   };
   inherits(PioneerAVR.AudioDeviceService, Service);
 
@@ -191,7 +199,11 @@ module.exports = function(homebridge) {
   		    volumeValue = Number(jsonResponse['Z'][0]['V']);
           volume = (volumeValue - 161) * 0.5
 
-          callback(null, Number(volume));
+          p = (volumeValue - minVolumeSet) * 100 / (maxVolumeSet - minVolumeSet);
+      		//this is what we send to HomeBridge
+      		p = p < 0 ? 0 : p > 100 ? 100 : Math.round(p);
+
+          callback(null, Number(p));
 
           this.log("MasterVolume is:", volume);
       	}
@@ -205,7 +217,10 @@ module.exports = function(homebridge) {
     },
 
   	setVolume: function(value, callback) {
-      url = this.volume_url + (value * 2 + 161) + "VL"
+
+      //this what we send to Pioneer when we get percentage from homebridge
+  		vl = Math.round( value * (maxVolumeSet - minVolumeSet) / 100 + minVolumeSet);
+      url = this.volume_url + vl + "VL"
 
   		this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
@@ -213,10 +228,10 @@ module.exports = function(homebridge) {
           callback(error);
         }
         else {
-          this.log("Set volume to", value, "db");
+          this.log("Set volume to", value, "%");
           callback();
           }
-      }.bind(this));
+      }.bind(this))
   	},
 
   getServices: function() {
@@ -229,19 +244,19 @@ module.exports = function(homebridge) {
 	    		.setCharacteristic(Characteristic.Model, "VSX-2020")
 	    		.setCharacteristic(Characteristic.SerialNumber, "1234567890");
 
-		var switchService = new Service.Switch("Power State");
+		var switchService = new Service.Switch("Power");
 		switchService
 			.getCharacteristic(Characteristic.On)
 				.on('get', this.getPowerState.bind(this))
 				.on('set', this.setPowerState.bind(this));
 
+
 		var audioDeviceService = new PioneerAVR.AudioDeviceService("Audio Functions");
-    /*
 		audioDeviceService
 			.getCharacteristic(PioneerAVR.Muting)
 				.on('get', this.getMuteState.bind(this))
 				.on('set', this.setMuteState.bind(this));
-*/
+
 		audioDeviceService
 			.getCharacteristic(PioneerAVR.AudioVolume)
 				.on('get', this.getVolume.bind(this))
