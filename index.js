@@ -17,10 +17,10 @@ module.exports = function(homebridge) {
 
   function PioneerAVR(log, config) {
     // configuration
-    this.ip = config['ip'];
-    this.name = config['name'];
-    maxVolume = config['maxVolume'];
-    minVolume = config['minVolume'];
+    this.ip = config.ip;
+    this.name = config.name;
+    maxVolume = config.maxVolume;
+    minVolume = config.minVolume;
 
     this.log = log;
 
@@ -71,15 +71,15 @@ module.exports = function(homebridge) {
   PioneerAVR.prototype = {
 
     httpRequest: function(url, method, callback) {
-		  var that = this;
+      var that = this;
 
-		  request({
+      request({
         url: url,
         method: method
-		  },
-		  function (error, response, body) {
-        callback(error, response, body)
-      })
+      },
+      function (error, response, body) {
+        callback(error, response, body);
+      });
     },
 
     getPowerState: function(callback) {
@@ -89,8 +89,8 @@ module.exports = function(homebridge) {
 
       this.httpRequest(url, "GET", function(error, response, body) {
         if (!error && response.statusCode == 200) {
-      		var jsonResponse = JSON.parse(body);
-      		powerState = jsonResponse['Z'][0]['P'];
+          var jsonResponse = JSON.parse(body);
+          powerState = jsonResponse['Z'][0]['P'];
 
           if (powerState == 1) {
             callback(null, true);
@@ -99,12 +99,12 @@ module.exports = function(homebridge) {
             callback(null, false);
           }
           this.log("Power state is:", powerState);
-      	}
+        }
         else {
           this.log('HTTP getPowerState function failed: %s', error);
           callback(error);
         }
-      }.bind(this))
+      }.bind(this));
 
     },
 
@@ -113,24 +113,24 @@ module.exports = function(homebridge) {
 
       if (powerOn) {
         url = this.on_url;
-      	this.log("Set", this.name, "to on");
-    	}
-    	else {
-      	url = this.off_url;
-      	this.log("Set", this.name, "to off");
-    	}
+        this.log("Set", this.name, "to on");
+      }
+      else {
+        url = this.off_url;
+        this.log("Set", this.name, "to off");
+      }
 
-    	this.httpRequest(url, "GET", function(error, response, body) {
-      	if (!error && response.statusCode == 200) {
-        	this.log('HTTP power function succeeded!');
-        	callback();
-      	}
-      	else {
+      this.httpRequest(url, "GET", function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          this.log('HTTP power function succeeded!');
+          callback();
+        }
+        else {
           this.log('HTTP power function failed: %s', error);
-        	callback(error);
-      		}
-    	}.bind(this));
-  	},
+          callback(error);
+          }
+      }.bind(this));
+    },
 
     getMuteState: function(callback) {
       var url;
@@ -138,8 +138,8 @@ module.exports = function(homebridge) {
 
       this.httpRequest(url, "GET", function(error, response, body) {
         if (!error && response.statusCode == 200) {
-      		var jsonResponse = JSON.parse(body);
-		      muteState = jsonResponse['Z'][0]['M'];
+          var jsonResponse = JSON.parse(body);
+          muteState = jsonResponse['Z'][0]['M'];
 
           if (muteState == 1) {
             callback(null, true);
@@ -148,70 +148,70 @@ module.exports = function(homebridge) {
             callback(null, false);
           }
           this.log("Mute state is:", muteState);
-      	}
+        }
         else {
           this.log('HTTP getMuteState function failed: %s', error);
           callback(error);
         }
-      }.bind(this))
+      }.bind(this));
 
     },
 
     setMuteState: function(muteOn, callback) {
-    	var url;
+      var url;
 
-    	if (muteOn) {
-      	url = this.mute_on;
-      	this.log(this.name, "muted");
-    	}
-    	else {
-      	url = this.mute_off;
-      	this.log(this.name, "unmuted");
-    	}
+      if (muteOn) {
+        url = this.mute_on;
+        this.log(this.name, "muted");
+      }
+      else {
+        url = this.mute_off;
+        this.log(this.name, "unmuted");
+      }
 
-    	this.httpRequest(url, "GET", function(error, response, body) {
+      this.httpRequest(url, "GET", function(error, response, body) {
         if (!error && response.statusCode == 200) {
-        	this.log('HTTP mute function succeeded!');
-        	callback();
-      	}
-      	else {
+          this.log('HTTP mute function succeeded!');
+          callback();
+        }
+        else {
           this.log('HTTP mute function failed: %s', error);
-        	callback(error);
-      		}
-    	}.bind(this));
-  	},
+          callback(error);
+          }
+      }.bind(this));
+    },
 
-  	getVolume: function(callback) {
+    getVolume: function(callback) {
       var url;
       url = this.get_url;
 
       this.httpRequest(url, "GET", function(error, response, body) {
         if (!error && response.statusCode == 200) {
           var jsonResponse = JSON.parse(body);
-  		    volumeValue = Number(jsonResponse['Z'][0]['V']);
-          volume = (volumeValue - 161) * 0.5
+          volumeValue = Number(jsonResponse['Z'][0]['V']);
+          volume = (volumeValue - 161) * 0.5;
 
           callback(null, Number(volume));
 
           this.log("MasterVolume is:", volume);
-      	}
+        }
         else {
           this.log('HTTP getVolume function failed: %s', error);
-        	callback(error);
-      		}
+          callback(error);
+          }
 
-      }.bind(this))
+      }.bind(this));
 
     },
 
-  	setVolume: function(value, callback) {
+    setVolume: function(value, callback) {
         var intValue = Math.round(value * 2 + 161);
         intValue = Math.max(intValue, 0);
         var valueStr = ("00" + intValue).slice(-3);
         
         url = this.volume_url + valueStr + "VL";
 
-  		this.httpRequest(url, "GET", function(error, response, body) {
+      this.httpRequest(url, "GET", function(error, response, body) {
         if (error) {
           this.log('HTTP volume function failed: %s', error);
           callback(error);
@@ -221,37 +221,37 @@ module.exports = function(homebridge) {
           callback();
           }
       }.bind(this));
-  	},
+    },
 
   getServices: function() {
-		var that = this;
+    var that = this;
 
-		var informationService = new Service.AccessoryInformation();
-		informationService
-	    		.setCharacteristic(Characteristic.Manufacturer, "Pioneer")
-	    		.setCharacteristic(Characteristic.Model, "VSX-2020")
-	    		.setCharacteristic(Characteristic.SerialNumber, "1234567890");
+    var informationService = new Service.AccessoryInformation();
+    informationService
+          .setCharacteristic(Characteristic.Manufacturer, "Pioneer")
+          .setCharacteristic(Characteristic.Model, "VSX-2020")
+          .setCharacteristic(Characteristic.SerialNumber, "1234567890");
 
-		var switchService = new Service.Switch(this.name);
-		switchService
-			.getCharacteristic(Characteristic.On)
-				.on('get', this.getPowerState.bind(this))
-				.on('set', this.setPowerState.bind(this));
+    var switchService = new Service.Switch(this.name);
+    switchService
+      .getCharacteristic(Characteristic.On)
+        .on('get', this.getPowerState.bind(this))
+        .on('set', this.setPowerState.bind(this));
 
-		var audioDeviceService = new PioneerAVR.AudioDeviceService("Audio Functions");
+    var audioDeviceService = new PioneerAVR.AudioDeviceService("Audio Functions");
     /*
-		audioDeviceService
-			.getCharacteristic(PioneerAVR.Muting)
-				.on('get', this.getMuteState.bind(this))
-				.on('set', this.setMuteState.bind(this));
+    audioDeviceService
+      .getCharacteristic(PioneerAVR.Muting)
+        .on('get', this.getMuteState.bind(this))
+        .on('set', this.setMuteState.bind(this));
 */
-		audioDeviceService
-			.getCharacteristic(PioneerAVR.AudioVolume)
-				.on('get', this.getVolume.bind(this))
-				.on('set', this.setVolume.bind(this));
+    audioDeviceService
+      .getCharacteristic(PioneerAVR.AudioVolume)
+        .on('get', this.getVolume.bind(this))
+        .on('set', this.setVolume.bind(this));
 
     //return [informationService, switchService];
-		return [informationService, switchService, audioDeviceService];
-		}
-	}
-}
+    return [informationService, switchService, audioDeviceService];
+    }
+  };
+};
